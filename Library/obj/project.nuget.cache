@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "wD8SXhZu9VtM5rCO4XDTgjyDjdS3a3/TxV8sijAMFxnL0kDlsaRyw3WlUGsAUTvvfXImGA6A2fkMvUlE8/CJFQ==",
+  "success": true,
+  "projectFilePath": "D:\\Projects\\GitHub\\Internship_Task_2\\Library\\Library.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Stepan\\.nuget\\packages\\automapper\\12.0.1\\automapper.12.0.1.nupkg.sha512",
+    "C:\\Users\\Stepan\\.nuget\\packages\\fluentvalidation\\11.5.0\\fluentvalidation.11.5.0.nupkg.sha512",
+    "C:\\Users\\Stepan\\.nuget\\packages\\microsoft.csharp\\4.7.0\\microsoft.csharp.4.7.0.nupkg.sha512"
+  ],
+  "logs": []
+}
