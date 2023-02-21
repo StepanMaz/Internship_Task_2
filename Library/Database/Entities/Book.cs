@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using FluentValidation;
 
 namespace Database.Entities
 {

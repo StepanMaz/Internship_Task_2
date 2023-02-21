@@ -1,4 +1,4 @@
-namespace Database.Entities.DTO
+namespace DTO
 {
     public class ExpandedBookDTO
     {
@@ -8,6 +8,13 @@ namespace Database.Entities.DTO
         public decimal Rating { get; set; }
         public string Cover { get; set; }
         public string Content { get; set; }
-        public IEnumerable<ReviewDTO> Reviews { get; set; }
+        public IEnumerable<ExpandedBookDTOReviewDTO> Reviews { get; set; }
+
+        public class ExpandedBookDTOReviewDTO
+        {
+            public int Id { get; set; }
+            public string Message { get; set; }
+            public string Reviewer { get; set; }
+        }
     }
 }

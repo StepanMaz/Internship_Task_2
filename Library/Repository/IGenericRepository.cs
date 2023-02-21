@@ -1,14 +1,14 @@
 using Database.Entities;
 
-namespace Repository
+namespace Repositories
 {
     public interface IGenericRepository<TEntity> where TEntity : class
     {
-        public void Create(TEntity item);
-        public TEntity FindById(int id);
-        public IEnumerable<TEntity> Get();
-        public IEnumerable<TEntity> Get(Func<TEntity, bool> predicate);
-        public void Remove(TEntity item);
-        public void Update(TEntity item);
+        public Task Create(TEntity item);
+        public Task<TEntity> FindById(int id);
+        public IQueryable<TEntity> Get();
+        public Task<IEnumerable<TEntity>> GetAll();
+        public Task Remove(TEntity item);
+        public Task Update(TEntity item);
     }
 }

@@ -1,6 +1,6 @@
-namespace Database.Entities.DTO
+namespace DTO
 {
-    public class BookDTO
+    public class ReviewedBookDTO
     {
         public int Id { get; set; }
         public string Title { get; set; }

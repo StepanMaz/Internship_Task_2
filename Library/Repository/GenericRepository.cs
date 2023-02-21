@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Database;
 using Database.Entities;
 
-namespace Repository
+namespace Repositories
 {
     public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEntity : class
     {
@@ -15,37 +15,37 @@ namespace Repository
             _dbSet = libraryContext.Set<TEntity>();
         }
 
-        public IEnumerable<TEntity> Get()
+        public IQueryable<TEntity> Get()
         {
-            return _dbSet.AsNoTracking().ToList();
+            return _dbSet.AsNoTracking();
         }
 
-        public IEnumerable<TEntity> Get(Func<TEntity, bool> predicate)
+        public async Task<IEnumerable<TEntity>> GetAll()
         {
-            return _dbSet.AsNoTracking().Where(predicate).ToList();
+            return await Get().ToListAsync();
         }
          
-        public TEntity FindById(int id)
+        public async Task <TEntity> FindById(int id)
         {
-            return _dbSet.Find(id);
+            return await _dbSet.FindAsync(id);
         }
  
-        public void Create(TEntity item)
+        public async Task Create(TEntity item)
         {
             _dbSet.Add(item);
-            _libraryContext.SaveChanges();
-        }
-        
-        public void Update(TEntity item)
-        {
-            _libraryContext.Entry(item).State = EntityState.Modified;
-            _libraryContext.SaveChanges();
+            await _libraryContext.SaveChangesAsync();
         }
 
-        public void Remove(TEntity item)
+        public async Task Update(TEntity item)
+        {
+            _libraryContext.Entry(item).State = EntityState.Modified;
+            await _libraryContext.SaveChangesAsync();
+        }
+
+        public async Task Remove(TEntity item)
         {
             _dbSet.Remove(item);
-            _libraryContext.SaveChanges();
+            await _libraryContext.SaveChangesAsync();
         }
     }
 }
