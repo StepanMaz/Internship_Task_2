@@ -17,7 +17,7 @@ namespace Repositories
 
         public IQueryable<TEntity> Get()
         {
-            return _dbSet.AsNoTracking();
+            return _dbSet;
         }
 
         public async Task<IEnumerable<TEntity>> GetAll()

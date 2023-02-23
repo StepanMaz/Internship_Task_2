@@ -10,6 +10,6 @@ namespace Database.Entities
         public string Reviewer { get; set; }
 
         public int BookID { get; set; }
-        public Book Book { get; set; }
+        public virtual Book Book { get; set; }
     }
 }

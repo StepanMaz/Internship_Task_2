@@ -1,16 +1,55 @@
+using AutoMapper;
+using FluentValidation.AspNetCore;
+
+using Database;
+using Database.Entities;
+using Microsoft.AspNetCore.HttpLogging;
+using Repositories;
+using FluentValidation;
+using Profiles;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddDbContext<LibraryContext>(options =>
+{
+    options.UseLazyLoadingProxies().UseInMemoryDatabase(databaseName: "LibraryDatabase");
+});
+
+builder.Services.AddScoped<IGenericRepository<Book>, GenericRepository<Book>>();
+
+builder.Services.AddHttpLogging(logging =>
+{
+    logging.LoggingFields = HttpLoggingFields.RequestMethod
+                            | HttpLoggingFields.RequestHeaders
+                            | HttpLoggingFields.RequestQuery
+                            | HttpLoggingFields.RequestBody;
+
+});
+builder.Services.AddSingleton(new MapperConfiguration(ctg => {
+    ctg.AddProfile<BookProfile>();
+    ctg.AddProfile<ReviewProfile>();
+    ctg.AddProfile<RatingProfile>();
+    ctg.AddProfile<IdContaningProfile>();
+}).CreateMapper());
+
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationClientsideAdapters();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
@@ -21,5 +60,6 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapRazorPages();
+app.MapControllers();
 
 app.Run();

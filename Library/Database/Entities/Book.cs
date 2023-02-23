@@ -13,7 +13,7 @@ namespace Database.Entities
         public string Author { get; set; }
         public string Genere { get; set; }
 
-        public ICollection<Review> Reviews { get; set; }
-        public ICollection<Rating> Ratings { get; set; }
+        public virtual ICollection<Review> Reviews { get; set; }
+        public virtual ICollection<Rating> Ratings { get; set; }
     }
 }

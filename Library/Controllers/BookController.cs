@@ -1,15 +1,13 @@
 using DTO;
-using Validators;
 using Repositories;
-using Configuration;
 using Database.Entities;
 
 using AutoMapper;
-using FluentValidation;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System.Reflection;
 
 namespace Controllers
 {
@@ -17,48 +15,52 @@ namespace Controllers
     [ApiController]
     public class BookController : ControllerBase
     {
-        private IConfig configuration;
-        private ILogger<BookController> logger;
+        private readonly IConfiguration configuration;
+        private readonly ILogger<BookController> logger;
+        private readonly IGenericRepository<Book> books;
+        private readonly IMapper mapper;
 
-        private IGenericRepository<Book> books;
-        private IGenericRepository<Review> reviews;
-        private IGenericRepository<Rating> ratings;
-        private IMapper mapper;
-
-        public BookController(IConfig configuration,
+        public BookController(IConfiguration configuration,
                               ILogger<BookController> logger,
                               IGenericRepository<Book> books,
-                              IGenericRepository<Review> reviews,
-                              IGenericRepository<Rating> ratings,
                               IMapper mapper)
         {
             this.logger = logger;
             this.books = books;
-            this.reviews = reviews;
-            this.ratings = ratings;
             this.mapper = mapper;
+            this.configuration = configuration;
         }
 
         [HttpGet("books")]
-        public async Task<ActionResult<IEnumerable<BookDTO>>> GetAll([FromQuery(Name = "order")] string order)
+        public async Task<ActionResult<IEnumerable<ReviewedBookDTO>>> GetAll([FromQuery(Name = "order")] string order)
         {
-            if(order is null)
+            PropertyInfo property = null;
+            if(order is not null)
             {
-                return Ok((await books.GetAll()).Select(mapper.Map<BookDTO>));
-            }
-            else 
-            {
-                var field = typeof(Book).GetProperty(order, System.Reflection.BindingFlags.IgnoreCase);
+                property = typeof(ReviewedBookDTO).GetProperty(order, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
 
-                if(field is null)
+                if (property is null)
                 {
                     return BadRequest("Provided `order` is not one of the valid choices.");
                 }
+            }
+
+            var bookscollection = await books.Get().ToListAsync();
+            var collection = bookscollection.Select(mapper.Map<ReviewedBookDTO>);
+
+            if (property is not null)
+            {
+                if(property.PropertyType == typeof(int))
+                {
+                    collection = collection.OrderByDescending(book => property.GetValue(book));
+                }
                 else
                 {
-                    return Ok((await books.GetAll()).OrderBy(book => field.GetValue(book)).Select(mapper.Map<BookDTO>));
+                    collection = collection.OrderBy(book => property.GetValue(book));
                 }
             }
+
+            return Ok(collection);
         }
 
         [HttpGet("recommended")]
@@ -68,21 +70,21 @@ namespace Controllers
                         
             if(genre is string)
             {
-                query.Where(book => book.Genere == genre);
+                query = query.Where(book => book.Genere.ToLower() == genre.ToLower());
             }
 
             query = (from book in query
                     where book.Ratings.Count() > 10
-                    orderby book.Ratings.Average(rating => rating.Score)
+                    orderby book.Ratings.Average(rating => rating.Score) descending
                     select book).Take(10);
 
-            return Ok((await query.ToListAsync()).Select(mapper.Map<BookDTO>));
+            return Ok((await query.ToListAsync()).Select(mapper.Map<ReviewedBookDTO>));
         }
 
         [HttpGet("books/{id:int}")]
-        public ActionResult<IEnumerable<ExpandedBookDTO>> GetBookWithRviews(int id)
+        public async Task<ActionResult<ExpandedBookDTO>> GetBookWithRviews(int id)
         {
-            var book = books.FindById(id);
+            var book = await books.FindById(id);
             if(book is null) {
                 return NotFound($"Book with id = {id} was not found");
             }
@@ -90,10 +92,10 @@ namespace Controllers
         }
 
         
-        [HttpDelete("books/{id:int}?{secret}")]
-        public async Task<ActionResult> GetBookWithRviews(int id, string secret)
+        [HttpDelete("books/{id:int}")]
+        public async Task<ActionResult> GetBookWithRviews(int id, [FromQuery(Name = "secret")] string secret)
         {
-            if(configuration.IsValidSecret(secret))
+            if(configuration.GetValue<string>("secret") == secret)
             {
                 await books.Remove(await books.FindById(id));
                 return Ok();
@@ -108,9 +110,7 @@ namespace Controllers
         {
             var book = mapper.Map<Book>(bookDTO);
 
-            await new BookValidator().ValidateAndThrowAsync(book);
-
-            if(bookDTO.Id is not null)
+            if(bookDTO.Id is null)
             {
                 await books.Create(book); 
             }
@@ -121,30 +121,42 @@ namespace Controllers
              return Ok(mapper.Map<IdContainerDTO>(book));
         }
 
-         [HttpPut("books/{id:int}/review")]
-        public async Task<ActionResult> AddReview([FromQuery(Name = "id")] int id,
+        [HttpPut("books/{id:int}/review")]
+        public async Task<ActionResult> AddReview(int id,
                                                   [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] ReviewDTO reviewDTO)
         {
+            var book = await books.FindById(id);
+
+            if (book is null)
+            {
+                return BadRequest("Wrong book id");
+            }
+
             var review = mapper.Map<Review>(reviewDTO);
-            review.BookID = id;
 
-            await new ReviewValidator().ValidateAndThrowAsync(review);
+            book.Reviews.Add(review);
 
-            await reviews.Create(review);
+            await books.Update(book);
 
             return Ok(mapper.Map<IdContainerDTO>(review));
         }
 
         [HttpPut("books/{id:int}/rate")]
-        public async Task<ActionResult> RateABook([FromQuery(Name = "id")] int id,
+        public async Task<ActionResult> RateABook(int id,
                                                   [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Disallow)] RatingDTO ratingDTO)
         {
+            var book = await books.FindById(id);
+
+            if (book is null)
+            {
+                return BadRequest("Wrong book id");
+            }
+
             var rating = mapper.Map<Rating>(ratingDTO);
-            rating.BookID = id;
 
-            await new RatingValidator().ValidateAndThrowAsync(rating);
+            book.Ratings.Add(rating);
 
-            await ratings.Create(rating);
+            await books.Update(book);
 
             return Ok(mapper.Map<IdContainerDTO>(rating));
         }
