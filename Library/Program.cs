@@ -39,6 +39,14 @@ builder.Services.AddSingleton(new MapperConfiguration(ctg => {
     ctg.AddProfile<IdContaningProfile>();
 }).CreateMapper());
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(
+        name: "CORSOpenPolicy", 
+        builder => builder.WithOrigins("*").AllowAnyHeader().AllowAnyMethod()
+    );
+});
+
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
@@ -51,6 +59,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
+}
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
@@ -61,5 +74,7 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 app.MapControllers();
+
+app.UseCors("CORSOpenPolicy");
 
 app.Run();

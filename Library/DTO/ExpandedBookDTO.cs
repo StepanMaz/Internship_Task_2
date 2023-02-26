@@ -8,6 +8,7 @@ namespace DTO
         public decimal Rating { get; set; }
         public string Cover { get; set; }
         public string Content { get; set; }
+        public string Genre {get; set;}
         public IEnumerable<ExpandedBookDTOReviewDTO> Reviews { get; set; }
 
         public class ExpandedBookDTOReviewDTO
