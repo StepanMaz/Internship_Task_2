@@ -82,7 +82,7 @@ namespace Controllers
         }
 
         [HttpGet("books/{id:int}")]
-        public async Task<ActionResult<ExpandedBookDTO>> GetBookWithRviews(int id)
+        public async Task<ActionResult<ExpandedBookDTO>> GetBookWithReviews(int id)
         {
             var book = await books.FindById(id);
             if(book is null) {
@@ -93,7 +93,7 @@ namespace Controllers
 
         
         [HttpDelete("books/{id:int}")]
-        public async Task<ActionResult> GetBookWithRviews(int id, [FromQuery(Name = "secret")] string secret)
+        public async Task<ActionResult> GetBookWithReviews(int id, [FromQuery(Name = "secret")] string secret)
         {
             if(configuration.GetValue<string>("secret") == secret)
             {
