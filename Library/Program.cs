@@ -12,7 +12,6 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -39,14 +38,6 @@ builder.Services.AddSingleton(new MapperConfiguration(ctg => {
     ctg.AddProfile<IdContaningProfile>();
 }).CreateMapper());
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(
-        name: "CORSOpenPolicy", 
-        builder => builder.WithOrigins("*").AllowAnyHeader().AllowAnyMethod()
-    );
-});
-
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
@@ -66,15 +57,11 @@ else
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
-
-app.UseRouting();
 
 app.UseAuthorization();
 
-app.MapRazorPages();
 app.MapControllers();
 
-app.UseCors("CORSOpenPolicy");
+app.UseCors(o => o.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
 
 app.Run();
